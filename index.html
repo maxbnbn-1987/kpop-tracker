@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎀 Girl Group Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --pink:#F2C4D0;--pink-d:#C46D8A;--pink-t:#7A2E4A;
+  --lav:#E8E0F5;--lav-d:#9B7EC8;--lav-t:#4A2C7A;
+  --mint:#C8EDE3;--mint-d:#5BAD8C;--mint-t:#1A5C42;
+  --peach:#FAE0D0;--peach-d:#D08060;--peach-t:#6A2E10;
+  --gold:#F5E6C0;--gold-d:#C8A040;--gold-t:#5A3A00;
+  --bg:#FDF7F4;--card:#fff;--border:rgba(180,100,130,0.12);
+  --txt:#2A1520;--txts:#7A5060;--txtx:#B08090;
+  --shadow:0 2px 16px rgba(180,80,120,0.08);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#F9E4EE 0%,#EDD8F8 45%,#D8EBF8 100%);
+  padding:1.5rem 1.5rem 1rem;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;
+  background:rgba(255,255,255,0.22);border-radius:50%}
+.header-inner{position:relative;max-width:960px;margin:0 auto}
+.logo{font-family:'DM Serif Display',serif;font-size:26px;color:#6A1A3A;letter-spacing:-.5px}
+.logo span{font-style:italic;color:#9B5C7A}
+.tagline{font-size:12px;color:#9A5070;margin:3px 0 10px}
+.last-upd{font-size:10px;color:#B88099}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.pill{font-size:11px;font-weight:500;padding:5px 13px;border-radius:20px;cursor:pointer;border:none;transition:all .18s;font-family:'DM Sans',sans-serif}
+.pill:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.1)}
+.pill.active{box-shadow:0 3px 12px rgba(0,0,0,.15);transform:translateY(-1px)}
+.p-all{background:rgba(180,80,130,.12);color:#6A2E4A;border:1px solid rgba(180,80,130,.25)}
+.p-twice{background:#F2C4D0;color:#7A2E4A}.p-baby{background:#E8E0F5;color:#4A2C7A}
+.p-ive{background:#C8EDE3;color:#1A5C42}.p-idle{background:#FAE0D0;color:#6A2E10}
+.p-aespa{background:#F5E6C0;color:#5A3A00}.p-bday{background:#FEF0C8;color:#7A5500;border:1px solid #E8C94A}
+
+.notice{background:rgba(242,196,208,.28);border-left:3px solid #C46D8A;
+  padding:.55rem 1rem;font-size:11.5px;color:#7A2E4A;
+  max-width:960px;margin:.75rem auto;border-radius:0 8px 8px 0}
+.main{max-width:960px;margin:0 auto;padding:.75rem 1rem 4rem}
+
+/* NAV + CALENDAR LAYOUT */
+.cal-section{display:grid;grid-template-columns:1fr 108px;gap:12px;align-items:start}
+@media(max-width:640px){.cal-section{grid-template-columns:1fr}.side-panel{display:none}}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.nav-btn{background:var(--card);border:1px solid var(--border);border-radius:9px;
+  padding:6px 16px;font-size:12px;cursor:pointer;color:var(--txt);font-family:'DM Sans',sans-serif;transition:all .15s}
+.nav-btn:hover{background:#F9ECF0;border-color:var(--pink-d)}
+.month-title{font-family:'DM Serif Display',serif;font-size:20px;color:#6A1A3A;font-style:italic}
+
+.cal-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:.85rem;box-shadow:var(--shadow)}
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
+.wd{font-size:10.5px;font-weight:500;color:var(--txtx);text-align:center;padding:3px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cell{min-height:78px;padding:4px 3px;border-radius:8px;background:#FDF9FB;
+  border:1px solid transparent;position:relative;transition:border-color .15s}
+.cell:hover{border-color:rgba(196,109,138,.2)}
+.cell.today{border-color:rgba(196,109,138,.5)!important;background:rgba(242,196,208,.1)}
+.cell.empty{background:transparent;border-color:transparent!important}
+.cell.out-range{opacity:.3}
+.dnum{font-size:10.5px;font-weight:500;color:var(--txtx);margin-bottom:2px;line-height:1}
+.dnum.is-today{background:#C46D8A;color:#fff;width:19px;height:19px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:9.5px}
+.dnum.is-sun{color:#D05070}
+
+/* EVENT TAGS */
+.ev{font-size:8.5px;padding:1.5px 3px;border-radius:3px;margin-bottom:1.5px;
+  line-height:1.35;cursor:pointer;transition:opacity .12s;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;max-width:100%;display:block}
+.ev:hover{opacity:.75}
+/* Birthday events */
+.ev.bday{background:#FEF6D6;color:#7A5500;border-left:2px solid #E8C040;font-size:8px}
+/* Concert / album / ticket */
+.ev.concert-twice{background:#F2C4D0;color:#7A2E4A}.ev.album-twice{background:#fce8ee;color:#7A2E4A;border-left:2px solid #C46D8A}
+.ev.ticket-twice{background:#fff0f4;color:#7A2E4A;border:1px dashed #C46D8A}
+.ev.concert-baby{background:#E8E0F5;color:#4A2C7A}.ev.album-baby{background:#f2edfb;color:#4A2C7A;border-left:2px solid #9B7EC8}
+.ev.ticket-baby{background:#f7f4fd;color:#4A2C7A;border:1px dashed #9B7EC8}
+.ev.concert-ive{background:#C8EDE3;color:#1A5C42}.ev.album-ive{background:#dff5ee;color:#1A5C42;border-left:2px solid #5BAD8C}
+.ev.ticket-ive{background:#edfaf5;color:#1A5C42;border:1px dashed #5BAD8C}
+.ev.concert-idle{background:#FAE0D0;color:#6A2E10}.ev.album-idle{background:#fceee5;color:#6A2E10;border-left:2px solid #D08060}
+.ev.ticket-idle{background:#fef7f3;color:#6A2E10;border:1px dashed #D08060}
+.ev.concert-aespa{background:#F5E6C0;color:#5A3A00}.ev.album-aespa{background:#faf1d8;color:#5A3A00;border-left:2px solid #C8A040}
+.ev.ticket-aespa{background:#fdf9ec;color:#5A3A00;border:1px dashed #C8A040}
+.more{font-size:8px;color:var(--txts);cursor:pointer;padding:1px 2px}
+.more:hover{text-decoration:underline}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:.6rem 0 0;align-items:center}
+.lg{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--txts)}
+.lg-icon{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.lg-sep{width:1px;height:11px;background:var(--border)}
+
+/* SIDE PANEL - IDOL ILLUSTRATIONS */
+.side-panel{display:flex;flex-direction:column;gap:8px}
+.idol-card{background:var(--card);border-radius:12px;border:1px solid var(--border);
+  padding:8px 6px;text-align:center;box-shadow:var(--shadow);overflow:hidden;position:relative}
+.idol-svg{width:72px;height:80px;margin:0 auto;display:block}
+.idol-name{font-size:9px;font-weight:500;color:var(--txts);margin-top:4px}
+.idol-group{font-size:8px;color:var(--txtx)}
+.idol-next-bday{font-size:8px;margin-top:3px;padding:2px 6px;border-radius:8px;
+  background:#FEF6D6;color:#7A5500;display:inline-block}
+
+/* EVENT LIST */
+.section-title{font-family:'DM Serif Display',serif;font-size:17px;color:#6A1A3A;
+  margin:1.4rem 0 .6rem;font-style:italic}
+.ev-list{display:flex;flex-direction:column;gap:7px}
+.ev-card{background:var(--card);border-radius:12px;border:1px solid var(--border);
+  padding:.75rem .9rem;display:flex;align-items:flex-start;gap:.65rem;
+  cursor:pointer;transition:all .18s;box-shadow:var(--shadow)}
+.ev-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(180,80,120,.12);border-color:rgba(196,109,138,.3)}
+.ev-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.ev-dot.concert{background:var(--pink-d)}.ev-dot.album{background:var(--lav-d)}.ev-dot.ticket{background:var(--mint-d)}.ev-dot.birthday{background:#E8C040}
+.ev-main{flex:1;min-width:0}
+.ev-group-tag{font-size:9.5px;font-weight:500;padding:2px 7px;border-radius:10px;display:inline-block;margin-bottom:4px}
+.ev-title-text{font-size:13px;font-weight:500;color:var(--txt);margin-bottom:2px}
+.ev-meta{font-size:11.5px;color:var(--txts)}
+.ev-date-badge{font-size:10.5px;font-weight:500;color:var(--txtx);white-space:nowrap;text-align:right;padding-top:2px;min-width:68px}
+.ev-days-away{font-size:9.5px;margin-top:2px}
+.days-soon{color:#C46D8A}.days-future{color:var(--txtx)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(60,10,25,.38);z-index:900;
+  display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .18s ease}
+.overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--card);border-radius:18px;max-width:350px;width:100%;
+  padding:1.3rem;box-shadow:0 20px 60px rgba(100,20,50,.2);max-height:90vh;overflow-y:auto;
+  animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--txts);line-height:1;padding:0 0 4px 8px}
+.modal-badge{display:inline-block;font-size:11px;padding:3px 9px;border-radius:12px;margin-bottom:9px;font-weight:500}
+.modal-title{font-family:'DM Serif Display',serif;font-size:17px;color:#6A1A3A;margin-bottom:9px;clear:both}
+.modal-type{font-size:10.5px;letter-spacing:.5px;color:var(--txts);margin-bottom:6px}
+.info-row{display:flex;gap:6px;margin-bottom:5px;font-size:12.5px;align-items:flex-start}
+.info-label{color:var(--txts);flex-shrink:0;min-width:46px}
+.info-val{color:var(--txt)}
+.modal-note{font-size:11.5px;color:var(--txts);margin-top:9px;padding-top:9px;border-top:1px solid var(--border);font-style:italic;line-height:1.6}
+.ticket-btn{display:block;margin-top:11px;padding:8px 16px;border-radius:10px;
+  background:linear-gradient(135deg,#D4688A,#9B6BBB);color:#fff;
+  font-size:12.5px;font-weight:500;text-align:center;border:none;cursor:pointer;
+  width:100%;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.ticket-btn:hover{opacity:.88}
+.footer{text-align:center;padding:1.5rem;font-size:10.5px;color:var(--txtx)}
+
+/* BIRTHDAY SECTION */
+.bday-strip{background:var(--card);border-radius:12px;border:1px solid var(--border);
+  padding:.75rem 1rem;margin-bottom:.9rem;box-shadow:var(--shadow)}
+.bday-strip-title{font-size:12px;font-weight:500;color:#7A5500;margin-bottom:.5rem}
+.bday-items{display:flex;flex-wrap:wrap;gap:6px}
+.bday-chip{font-size:10.5px;padding:3px 8px;border-radius:10px;
+  background:#FEF6D6;color:#7A5500;border:1px solid #E8C040}
+
+@media(max-width:480px){.cell{min-height:58px;padding:3px 2px}.ev{font-size:7.5px}.header{padding:1.1rem .9rem .8rem}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">🎀 Girl Group <span>Tracker</span></div>
+    <div class="tagline">TWICE · BABYMONSTER · IVE · (G)I-DLE · aespa — 台灣活動 &amp; 新專輯 &amp; 成員生日</div>
+    <div class="last-upd">最後更新：2026/3/29 ｜ 追蹤今日起 365 天（台灣場 + 新專輯 + 成員生日）</div>
+    <div class="pills">
+      <button class="pill p-all active" onclick="filter('all',this)">✦ 全部</button>
+      <button class="pill p-twice" onclick="filter('twice',this)">TWICE</button>
+      <button class="pill p-baby" onclick="filter('baby',this)">BABYMONSTER</button>
+      <button class="pill p-ive" onclick="filter('ive',this)">IVE</button>
+      <button class="pill p-idle" onclick="filter('idle',this)">(G)I-DLE</button>
+      <button class="pill p-aespa" onclick="filter('aespa',this)">aespa</button>
+      <button class="pill p-bday" onclick="filter('bday',this)">🎂 生日</button>
+    </div>
+  </div>
+</div>
+
+<div class="notice">📣 線下活動僅顯示台灣場。aespa 台灣場尚未公告，持續關注 @aespa_official。</div>
+
+<div class="main">
+  <div id="bday-strip-wrap"></div>
+
+  <div class="nav">
+    <button class="nav-btn" onclick="prevMonth()">← 上個月</button>
+    <div class="month-title" id="month-title"></div>
+    <button class="nav-btn" onclick="nextMonth()">下個月 →</button>
+  </div>
+
+  <div class="cal-section">
+    <div>
+      <div class="cal-wrap">
+        <div class="weekdays">
+          <div class="wd" style="color:#D05070">日</div>
+          <div class="wd">一</div><div class="wd">二</div><div class="wd">三</div>
+          <div class="wd">四</div><div class="wd">五</div><div class="wd">六</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="legend">
+          <div class="lg"><div class="lg-icon" style="background:#F2C4D0;border:1.5px solid #C46D8A"></div>演唱會</div>
+          <div class="lg-sep"></div>
+          <div class="lg"><div class="lg-icon" style="background:#f0eaf9;border-left:2.5px solid #9B7EC8;border-radius:0 2px 2px 0"></div>新專輯</div>
+          <div class="lg-sep"></div>
+          <div class="lg"><div class="lg-icon" style="background:#fef7f3;border:1px dashed #D08060"></div>購票開售</div>
+          <div class="lg-sep"></div>
+          <div class="lg"><div class="lg-icon" style="background:#FEF6D6;border-left:2px solid #E8C040;border-radius:0 2px 2px 0"></div>🎂 生日</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-panel" id="side-panel"></div>
+  </div>
+
+  <div class="section-title" id="upcoming-title">即將到來</div>
+  <div class="ev-list" id="ev-list"></div>
+</div>
+
+<div class="footer">資訊來源：拓元售票 · Live Nation Taiwan · KKLIVE · KProfiles · 各官方社群<br>購票請以官方渠道為準。</div>
+
+<div class="overlay hidden" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   成員生日資料庫（固定日期，不含年份）
+   格式: { group, name, nameEn, month, day, color }
+═══════════════════════════════════════════ */
+const BIRTHDAYS = [
+  // TWICE
+  {group:'twice',name:'娜璉 Nayeon',month:9,day:22,color:'#F2C4D0'},
+  {group:'twice',name:'定延 Jeongyeon',month:11,day:1,color:'#EDD5F3'},
+  {group:'twice',name:'模模 Momo',month:11,day:9,color:'#F9D8E8'},
+  {group:'twice',name:'莎娜 Sana',month:12,day:29,color:'#E8D5F3'},
+  {group:'twice',name:'智孝 Jihyo',month:2,day:1,color:'#FFDAE8'},
+  {group:'twice',name:'美那 Mina',month:3,day:24,color:'#DDE8F8'},
+  {group:'twice',name:'多賢 Dahyun',month:5,day:28,color:'#E8F5FF'},
+  {group:'twice',name:'彩瑛 Chaeyoung',month:4,day:23,color:'#FFE8EC'},
+  {group:'twice',name:'子瑜 Tzuyu',month:6,day:14,color:'#E8F8EE'},
+  // BABYMONSTER
+  {group:'baby',name:'Ruka',month:3,day:20,color:'#E8E0F5'},
+  {group:'baby',name:'Pharita',month:5,day:23,color:'#F0EAF8'},
+  {group:'baby',name:'Asa',month:12,day:26,color:'#DDD5F0'},
+  {group:'baby',name:'Ahyeon',month:4,day:11,color:'#EDE5F8'},
+  {group:'baby',name:'Rami',month:3,day:13,color:'#E5DCF5'},
+  {group:'baby',name:'Rora',month:8,day:14,color:'#EAE2F7'},
+  {group:'baby',name:'Chiquita',month:2,day:17,color:'#F3EEF9'},
+  // IVE
+  {group:'ive',name:'宥真 Yujin',month:9,day:1,color:'#C8EDE3'},
+  {group:'ive',name:'可愛 Gaeul',month:9,day:24,color:'#BDE8DB'},
+  {group:'ive',name:'Rei',month:2,day:3,color:'#D5F0E8'},
+  {group:'ive',name:'元榮 Wonyoung',month:8,day:31,color:'#C5EDE0'},
+  {group:'ive',name:'Liz',month:11,day:21,color:'#CEF0E6'},
+  {group:'ive',name:'李瑞 Leeseo',month:2,day:21,color:'#D8F2EB'},
+  // (G)I-DLE
+  {group:'idle',name:'美延 Miyeon',month:1,day:31,color:'#FAE0D0'},
+  {group:'idle',name:'Minnie',month:10,day:23,color:'#FAEBD8'},
+  {group:'idle',name:'素妍 Soyeon',month:8,day:26,color:'#F5D8C5'},
+  {group:'idle',name:'雨琦 Yuqi',month:9,day:23,color:'#FCE5D5'},
+  {group:'idle',name:'舒華 Shuhua',month:1,day:6,color:'#F8E2CE'},
+  // aespa
+  {group:'aespa',name:'Karina',month:4,day:11,color:'#F5E6C0'},
+  {group:'aespa',name:'Giselle',month:10,day:30,color:'#F8EEC8'},
+  {group:'aespa',name:'Winter',month:1,day:1,color:'#F3E4B8'},
+  {group:'aespa',name:'NingNing',month:10,day:23,color:'#FAF0D0'},
+];
+
+/* ═══════════════════════════════════════════
+   事件資料庫
+═══════════════════════════════════════════ */
+const EVENTS = [
+  {date:'2026-01-02',endDate:'2026-01-03',group:'baby',type:'concert',
+   title:'BABYMONSTER 台北小巨蛋',fullTitle:'BABYMONSTER WORLD TOUR [CLICK] IN TAIPEI',
+   venue:'台北小巨蛋',time:'2026/1/2（五）、1/3（六）19:00',
+   ticket:'已開售（2025/11/15 全面起售）',price:'NT$800 / 2,200 / 3,200 / 4,200 / 4,800 / 5,600 / 6,500',
+   ticketUrl:'https://kktix.com',note:'首組登上台北小巨蛋開專場的韓國女團！',status:'confirmed'},
+  {date:'2026-01-24',group:'idle',type:'ticket',
+   title:'(G)I-DLE 大巨蛋 — 會員優先購',fullTitle:'2026 (G)I-DLE [Syncopation] — 會員優先購',
+   venue:'台北大巨蛋',time:'2026/1/24（六）18:00',ticket:'KKLIVE 會員優先購',
+   price:'（見全面開售）',ticketUrl:'https://kklive.tw',note:'舒華帶隊回台！首組大巨蛋韓國女團。',status:'confirmed'},
+  {date:'2026-02-01',group:'idle',type:'ticket',
+   title:'(G)I-DLE 大巨蛋 — 全面開售',fullTitle:'2026 (G)I-DLE [Syncopation] — 全面開售',
+   venue:'台北大巨蛋',time:'2026/2/1（日）10:00 國泰世華；14:30 全面啟售',
+   ticket:'KKLIVE 全面啟售',price:'NT$2,200–6,000（約）',
+   ticketUrl:'https://kklive.tw',note:'每人限購 2 張，實名制。',status:'confirmed'},
+  {date:'2026-02-23',group:'ive',type:'album',
+   title:'IVE《REVIVE+》新專輯',fullTitle:'IVE 第二張正規專輯《REVIVE+》',
+   venue:'全球串流平台',time:'2026/2/23',ticket:'—',price:'—',ticketUrl:'',
+   note:'12首曲目。〈BANG BANG〉達成2026年首個完美全殺。',status:'confirmed'},
+  {date:'2026-03-07',group:'idle',type:'concert',
+   title:'(G)I-DLE 台北大巨蛋',fullTitle:'2026 (G)I-DLE WORLD TOUR [Syncopation] IN TAIPEI',
+   venue:'台北大巨蛋',time:'2026/3/7（六）19:00',ticket:'已開售',price:'NT$2,200–6,000（約）',
+   ticketUrl:'https://kklive.tw',note:'[Syncopation] 世界巡迴第二站。',status:'confirmed'},
+  {date:'2026-03-20',endDate:'2026-03-22',group:'twice',type:'concert',
+   title:'TWICE 台北大巨蛋（3天）',fullTitle:'TWICE ＜THIS IS FOR＞ WORLD TOUR IN TAIPEI',
+   venue:'台北大巨蛋',time:'2026/3/20–22（五六日）19:00',
+   ticket:'已開售（2025/12/4 全面起售）',price:'NT$1,800–6,800；VIP $8,800',
+   ticketUrl:'https://tixcraft.com/activity/detail/26_twice',
+   note:'VIP含場前Soundcheck＋限定周邊。贊助：Samsung Taiwan。',status:'confirmed'},
+  {date:'2026-04-03',group:'ive',type:'ticket',
+   title:'IVE 台北小巨蛋 — 全面開售',fullTitle:'IVE WORLD TOUR ＜SHOW WHAT I AM＞ — 購票開始',
+   venue:'台北小巨蛋（拓元售票）',time:'2026/4/3（五）11:00',ticket:'拓元售票全面開賣',
+   price:'NT$800 / 2,300 / 2,800 / 3,800 / 4,800 / 5,800；VIP $7,800',
+   ticketUrl:'https://tixcraft.com',
+   note:'VIP含Soundcheck＋優先入場＋VIP掛繩吊牌。',status:'confirmed'},
+  {date:'2026-09-11',endDate:'2026-09-12',group:'ive',type:'concert',
+   title:'IVE 台北小巨蛋（2天）',fullTitle:'IVE WORLD TOUR ＜SHOW WHAT I AM＞ IN TAIPEI',
+   venue:'台北小巨蛋',time:'2026/9/11（五）、9/12（六）',
+   ticket:'2026/4/3 11:00 拓元售票全面開賣',price:'NT$800–5,800；VIP $7,800',
+   ticketUrl:'https://tixcraft.com',note:'SHOW WHAT I AM 世界巡迴台灣站。Live Nation Taiwan 主辦。',status:'confirmed'},
+  {date:'2026-06-01',group:'aespa',type:'concert',
+   title:'aespa 台灣場（待公告）',fullTitle:'aespa LIVE TOUR SYNK: aeXIS LINE — 台灣場',
+   venue:'台灣（待公告）',time:'待公告',ticket:'待公告',price:'—',ticketUrl:'',
+   note:'⚠️ 台灣場尚未正式公告，此為提醒佔位。確認後即時更新。',status:'tba'},
+];
+
+/* ═══════════════ 工具 ═══════════════ */
+const today = new Date(); today.setHours(0,0,0,0);
+const rangeEnd = new Date(today); rangeEnd.setDate(rangeEnd.getDate()+365);
+let curYear=today.getFullYear(), curMonth=today.getMonth(), activeFilter='all';
+const MONTHS_ZH=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+const GROUP_NAME={twice:'TWICE',baby:'BABYMONSTER',ive:'IVE',idle:'(G)I-DLE',aespa:'aespa'};
+const GROUP_COLOR={twice:['#F2C4D0','#7A2E4A'],baby:['#E8E0F5','#4A2C7A'],ive:['#C8EDE3','#1A5C42'],idle:['#FAE0D0','#6A2E10'],aespa:['#F5E6C0','#5A3A00']};
+const TYPE_LABEL={concert:'🎤 演唱會',album:'💿 新專輯',ticket:'🎫 購票開售'};
+function parseDate(s){const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function fmtDate(d){return`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`}
+function inRange(d){return d>=today&&d<=rangeEnd}
+function matchFilter(ev){return activeFilter==='all'||(activeFilter==='bday'&&ev.type==='birthday')||activeFilter===ev.group}
+function daysAway(dateStr){
+  const d=parseDate(dateStr),diff=Math.round((d-today)/(1000*60*60*24));
+  if(diff===0)return'今天！';if(diff<0)return'已過';if(diff===1)return'明天';
+  if(diff<=7)return`${diff}天後`;if(diff<=30)return`約${Math.round(diff/7)}週後`;
+  return`約${Math.ceil(diff/30)}個月後`
+}
+/* 取得某年月日的生日事件 */
+function getBirthdaysForDate(y,m,d){
+  return BIRTHDAYS
+    .filter(b=>b.month===m+1&&b.day===d)
+    .filter(b=>activeFilter==='all'||activeFilter==='bday'||activeFilter===b.group)
+    .map(b=>({...b,date:`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,type:'birthday'}));
+}
+function getEventsForDate(y,m,d){
+  const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const reg=EVENTS.filter(e=>{
+    const start=parseDate(e.date),end=e.endDate?parseDate(e.endDate):start,cell=new Date(y,m,d);
+    return cell>=start&&cell<=end&&matchFilter(e);
+  });
+  const bdays=getBirthdaysForDate(y,m,d);
+  return[...reg,...bdays];
+}
+/* 取得指定月份所有生日（for side panel） */
+function getBirthdaysInMonth(y,m){
+  return BIRTHDAYS.filter(b=>b.month===m+1)
+    .sort((a,b)=>a.day-b.day)
+    .filter(b=>activeFilter==='all'||activeFilter==='bday'||activeFilter===b.group);
+}
+/* 取得今天起即將的生日（for strip） */
+function getUpcomingBirthdays(limit=5){
+  const results=[];
+  for(let offset=0;offset<=60;offset++){
+    const d=new Date(today);d.setDate(d.getDate()+offset);
+    BIRTHDAYS.forEach(b=>{
+      if(b.month===d.getMonth()+1&&b.day===d.getDate())results.push({...b,d,offset});
+    });
+    if(results.length>=limit)break;
+  }
+  return results.slice(0,limit);
+}
+
+/* ═══════════════ SIDE PANEL IDOL ILLUSTRATIONS ═══════════════ */
+const IDOL_COLORS={twice:'#F2C4D0',baby:'#E8E0F5',ive:'#C8EDE3',idle:'#FAE0D0',aespa:'#F5E6C0'};
+const IDOL_ACCENT={twice:'#C46D8A',baby:'#9B7EC8',ive:'#5BAD8C',idle:'#D08060',aespa:'#C8A040'};
+function makeSilhouette(color,accent){
+  return`<svg viewBox="0 0 72 90" xmlns="http://www.w3.org/2000/svg" class="idol-svg">
+    <defs>
+      <radialGradient id="bg${accent.replace('#','')}" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0.15"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="36" cy="48" rx="32" ry="38" fill="url(#bg${accent.replace('#','')})"/>
+    <!-- hair back -->
+    <ellipse cx="36" cy="26" rx="16" ry="20" fill="${accent}" opacity=".85"/>
+    <!-- face -->
+    <ellipse cx="36" cy="30" rx="12" ry="14" fill="#FDE8E8"/>
+    <!-- hair front / bangs -->
+    <path d="M24 22 Q36 14 48 22 Q46 26 36 24 Q26 26 24 22Z" fill="${accent}" opacity=".9"/>
+    <!-- hair sides -->
+    <path d="M24 25 Q18 32 20 42 Q23 38 24 34Z" fill="${accent}" opacity=".85"/>
+    <path d="M48 25 Q54 32 52 42 Q49 38 48 34Z" fill="${accent}" opacity=".85"/>
+    <!-- eyes -->
+    <ellipse cx="31" cy="29" rx="2.5" ry="2" fill="#4A2030"/>
+    <ellipse cx="41" cy="29" rx="2.5" ry="2" fill="#4A2030"/>
+    <ellipse cx="31.8" cy="28.5" rx=".8" ry=".7" fill="#fff" opacity=".8"/>
+    <ellipse cx="41.8" cy="28.5" rx=".8" ry=".7" fill="#fff" opacity=".8"/>
+    <!-- blush -->
+    <ellipse cx="28" cy="33" rx="3.5" ry="2" fill="${accent}" opacity=".35"/>
+    <ellipse cx="44" cy="33" rx="3.5" ry="2" fill="${accent}" opacity=".35"/>
+    <!-- mouth -->
+    <path d="M33 36 Q36 38.5 39 36" stroke="#C47080" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <!-- body / outfit -->
+    <path d="M22 50 Q20 62 18 78 L54 78 Q52 62 50 50 Q44 44 36 44 Q28 44 22 50Z" fill="${accent}" opacity=".7"/>
+    <!-- collar -->
+    <path d="M30 47 Q36 52 42 47 L40 44 Q36 46 32 44Z" fill="#fff" opacity=".7"/>
+    <!-- star decoration -->
+    <text x="33" y="74" font-size="10" fill="#fff" opacity=".9">✦</text>
+  </svg>`;
+}
+function renderSidePanel(){
+  const panel=document.getElementById('side-panel');
+  const bdays=getBirthdaysInMonth(curYear,curMonth);
+  if(!bdays.length){panel.innerHTML='';return}
+  const groups=[...new Set(bdays.map(b=>b.group))];
+  let html='';
+  groups.slice(0,3).forEach(g=>{
+    const memberBdays=bdays.filter(b=>b.group===g);
+    const c=IDOL_COLORS[g]||'#F2C4D0',a=IDOL_ACCENT[g]||'#C46D8A';
+    const nextB=memberBdays[0];
+    html+=`<div class="idol-card">
+      ${makeSilhouette(c,a)}
+      <div class="idol-name">${memberBdays.map(b=>b.name.split(' ')[0]).join('·')}</div>
+      <div class="idol-group">${GROUP_NAME[g]}</div>
+      ${nextB?`<div class="idol-next-bday">🎂 ${nextB.month}/${nextB.day}</div>`:''}
+    </div>`;
+  });
+  panel.innerHTML=html;
+}
+
+/* ═══════════════ BIRTHDAY STRIP ═══════════════ */
+function renderBdayStrip(){
+  const wrap=document.getElementById('bday-strip-wrap');
+  const upcoming=getUpcomingBirthdays(6);
+  if(!upcoming.length){wrap.innerHTML='';return}
+  const chips=upcoming.map(b=>`<span class="bday-chip">${b.month}/${b.day} 🎂 ${b.name.split(' ')[0]} (${GROUP_NAME[b.group]})</span>`).join('');
+  wrap.innerHTML=`<div class="bday-strip"><div class="bday-strip-title">🎂 近期成員生日</div><div class="bday-items">${chips}</div></div>`;
+}
+
+/* ═══════════════ RENDER CALENDAR ═══════════════ */
+function render(){
+  document.getElementById('month-title').textContent=`${curYear}年 ${MONTHS_ZH[curMonth]}`;
+  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
+  const first=new Date(curYear,curMonth,1).getDay();
+  const days=new Date(curYear,curMonth+1,0).getDate();
+  for(let i=0;i<first;i++){const c=document.createElement('div');c.className='cell empty';grid.appendChild(c)}
+  for(let d=1;d<=days;d++){
+    const cellDate=new Date(curYear,curMonth,d);
+    const isToday=cellDate.getTime()===today.getTime();
+    const isSun=cellDate.getDay()===0;
+    const ir=inRange(cellDate);
+    const c=document.createElement('div');c.className='cell'+(isToday?' today':'')+(ir?'':' out-range');
+    const dn=document.createElement('div');
+    if(isToday){dn.className='dnum is-today';dn.textContent=d}
+    else{dn.className='dnum'+(isSun?' is-sun':'');dn.textContent=d}
+    c.appendChild(dn);
+    const evs=getEventsForDate(curYear,curMonth,d);
+    const shown=[];
+    evs.forEach(ev=>{
+      if(shown.length>=2){return}
+      const tag=document.createElement('span');
+      if(ev.type==='birthday'){
+        tag.className='ev bday';
+        tag.textContent=`🎂 ${ev.name.split(' ')[0]}`;
+        tag.onclick=()=>openBdayModal(ev);
+      } else {
+        const isStart=ev.date===`${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        tag.className=`ev ${ev.type}-${ev.group}`;
+        if(!isStart){tag.textContent='↦ '+ev.title}
+        else tag.textContent=(ev.type==='concert'?'🎤 ':ev.type==='album'?'💿 ':'🎫 ')+ev.title;
+        tag.onclick=()=>openModal(ev);
+      }
+      c.appendChild(tag);shown.push(ev);
+    });
+    if(evs.length>2){const m=document.createElement('div');m.className='more';m.textContent=`+${evs.length-2}`;m.onclick=()=>openModal(evs[2]);c.appendChild(m)}
+    grid.appendChild(c);
+  }
+  renderSidePanel();
+  renderList();
+}
+
+/* ═══════════════ EVENT LIST ═══════════════ */
+function renderList(){
+  const list=document.getElementById('ev-list'),title=document.getElementById('upcoming-title');
+  list.innerHTML='';
+  const upcoming=[];
+  // Regular events
+  EVENTS.filter(e=>parseDate(e.date)>=today&&parseDate(e.date)<=rangeEnd&&matchFilter(e))
+    .forEach(e=>upcoming.push({...e,sortDate:parseDate(e.date)}));
+  // Birthdays (next 365 days)
+  BIRTHDAYS.filter(b=>activeFilter==='all'||activeFilter==='bday'||activeFilter===b.group).forEach(b=>{
+    for(let yr=curYear;yr<=curYear+1;yr++){
+      const d=new Date(yr,b.month-1,b.day);
+      if(d>=today&&d<=rangeEnd){
+        upcoming.push({type:'birthday',group:b.group,name:b.name,date:`${yr}-${String(b.month).padStart(2,'0')}-${String(b.day).padStart(2,'0')}`,sortDate:d,color:b.color});
+      }
+    }
+  });
+  upcoming.sort((a,b)=>a.sortDate-b.sortDate);
+  const fLabel=activeFilter==='all'?'即將到來（365天內）':activeFilter==='bday'?'🎂 即將生日':(`${GROUP_NAME[activeFilter]} 即將到來`);
+  title.textContent=fLabel;
+  if(!upcoming.length){list.innerHTML='<div style="text-align:center;color:var(--txts);padding:2rem;font-size:14px">此篩選範圍內暫無活動 🌸</div>';return}
+  upcoming.slice(0,30).forEach(ev=>{
+    const days=daysAway(ev.date);
+    const gc=ev.type==='birthday'?['#FEF6D6','#7A5500']:GROUP_COLOR[ev.group];
+    const card=document.createElement('div');card.className='ev-card';
+    if(ev.type==='birthday'){
+      card.innerHTML=`
+        <div class="ev-dot birthday"></div>
+        <div class="ev-main">
+          <span class="ev-group-tag" style="background:${gc[0]};color:${gc[1]}">${GROUP_NAME[ev.group]}</span>
+          <div class="ev-title-text">🎂 ${ev.name} 生日快樂！</div>
+          <div class="ev-meta">${GROUP_NAME[ev.group]}</div>
+        </div>
+        <div class="ev-date-badge">
+          <div>${fmtDate(ev.sortDate)}</div>
+          <div class="ev-days-away ${parseInt(days)<14?'days-soon':'days-future'}">${days}</div>
+        </div>`;
+      card.onclick=()=>openBdayModal(ev);
+    } else {
+      const tl={concert:'🎤',album:'💿',ticket:'🎫'}[ev.type]||'';
+      card.innerHTML=`
+        <div class="ev-dot ${ev.type}"></div>
+        <div class="ev-main">
+          <span class="ev-group-tag" style="background:${gc[0]};color:${gc[1]}">${GROUP_NAME[ev.group]}</span>
+          <div class="ev-title-text">${tl} ${ev.fullTitle||ev.title}</div>
+          <div class="ev-meta">${ev.venue||''}${ev.venue&&ev.time?' · ':''}${ev.time||''}</div>
+        </div>
+        <div class="ev-date-badge">
+          <div>${fmtDate(parseDate(ev.date))}</div>
+          <div class="ev-days-away ${parseInt(days)<14?'days-soon':'days-future'}">${days}</div>
+        </div>`;
+      card.onclick=()=>openModal(ev);
+    }
+    list.appendChild(card);
+  });
+}
+
+/* ═══════════════ MODALS ═══════════════ */
+function openBdayModal(b){
+  const m=document.getElementById('modal');
+  const gc=GROUP_COLOR[b.group];
+  m.innerHTML=`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="modal-badge" style="background:${gc[0]};color:${gc[1]}">${GROUP_NAME[b.group]}</span>
+    <div class="modal-type">🎂 成員生日</div>
+    <div class="modal-title">${b.name}</div>
+    <div class="info-row"><span class="info-label">生日</span><span class="info-val">${b.month} 月 ${b.day} 日</span></div>
+    <div class="info-row"><span class="info-label">團體</span><span class="info-val">${GROUP_NAME[b.group]}</span></div>
+    <div class="modal-note">🌸 每年 ${b.month}/${b.day} 記得傳訊息給她！</div>`;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function openModal(ev){
+  const m=document.getElementById('modal');
+  const gc=GROUP_COLOR[ev.group];
+  const statusBadge=ev.status==='tba'?'<span style="font-size:10px;background:#FFF3CD;color:#856404;padding:2px 7px;border-radius:6px;margin-left:6px">待公佈</span>':'';
+  const tl={concert:'🎤 演唱會',album:'💿 新專輯',ticket:'🎫 購票開售'}[ev.type]||ev.type;
+  m.innerHTML=`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <span class="modal-badge" style="background:${gc[0]};color:${gc[1]}">${GROUP_NAME[ev.group]}</span>${statusBadge}
+    <div class="modal-type">${tl}</div>
+    <div class="modal-title">${ev.fullTitle||ev.title}</div>
+    ${ev.venue?`<div class="info-row"><span class="info-label">地點</span><span class="info-val">${ev.venue}</span></div>`:''}
+    ${ev.time?`<div class="info-row"><span class="info-label">時間</span><span class="info-val">${ev.time}</span></div>`:''}
+    ${ev.ticket&&ev.ticket!=='—'?`<div class="info-row"><span class="info-label">購票</span><span class="info-val">${ev.ticket}</span></div>`:''}
+    ${ev.price&&ev.price!=='—'?`<div class="info-row"><span class="info-label">票價</span><span class="info-val">${ev.price}</span></div>`:''}
+    ${ev.note?`<div class="modal-note">${ev.note}</div>`:''}
+    ${ev.ticketUrl?`<button class="ticket-btn" onclick="window.open('${ev.ticketUrl}','_blank')">前往購票頁面 ↗</button>`:''}`;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function closeModal(e){if(!e||e.target===document.getElementById('overlay'))document.getElementById('overlay').classList.add('hidden')}
+function filter(g,btn){activeFilter=g;document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));btn.classList.add('active');renderBdayStrip();render()}
+function prevMonth(){if(curMonth===0){curMonth=11;curYear--}else curMonth--;render()}
+function nextMonth(){if(curMonth===11){curMonth=0;curYear++}else curMonth++;render()}
+
+renderBdayStrip();
+render();
+</script>
+</body>
+</html>
